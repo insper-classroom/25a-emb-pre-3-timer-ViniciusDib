@@ -5,9 +5,8 @@
 #define BTN_PIN_R 28
 #define LED_PIN_R 4
 
-volatile bool timer_ativo = false;
+
 volatile bool btn = false;
-repeating_timer_t timer;
 
 bool timer_callback(repeating_timer_t *rt) {
     gpio_put(LED_PIN_R, !gpio_get(LED_PIN_R)); 
@@ -21,8 +20,11 @@ void btn_callback(uint gpio, uint32_t events) {
 }
 
 int main() {
-    stdio_init_all();
+    repeating_timer_t timer;
+    bool timer_ativo = false;
     
+    stdio_init_all();
+
 
     gpio_init(LED_PIN_R);
     gpio_set_dir(LED_PIN_R, GPIO_OUT);
