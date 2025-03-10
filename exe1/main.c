@@ -7,21 +7,22 @@
 
 
 volatile bool btn = false;
+volatile bool timer_ativo = false;
 
 bool timer_callback(repeating_timer_t *rt) {
-    gpio_put(LED_PIN_R, !gpio_get(LED_PIN_R)); 
+    timer_ativo = true;
     return true; 
 }
 
 void btn_callback(uint gpio, uint32_t events) {
     if (events & GPIO_IRQ_EDGE_FALL) {
-        btn = true;
+        btn = !btn;
     }
 }
 
 int main() {
     repeating_timer_t timer;
-    bool timer_ativo = false;
+
     
     stdio_init_all();
 
@@ -38,19 +39,21 @@ int main() {
 
     gpio_set_irq_enabled_with_callback(BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
     
+    
+    if(!add_repeating_timer_ms(500, timer_callback, NULL, &timer)){
+      printf("Failed to add timer/n");
+    }
+    
     while (true) {
-        if (btn) {
-            btn = false; 
-            
-            if (!timer_ativo) {
-                add_repeating_timer_ms(500, timer_callback, NULL, &timer);
-                timer_ativo = true;
-            } else {
-                cancel_repeating_timer(&timer);
+        if (btn) {            
+            if (timer_ativo) {
+                gpio_put(LED_PIN_R, !gpio_get(LED_PIN_R)); 
                 timer_ativo = false;
+        }
+            } 
+            else {
                 gpio_put(LED_PIN_R, 0);
             }
-        }
         sleep_ms(10); 
     }
 }
